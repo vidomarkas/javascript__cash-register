@@ -60,7 +60,7 @@ function checkCashRegister(price, cash, cid) {
     let usedDenomination;
 
     usedDenomination = newCid.find(element => {
-      if (element.value <= changeDue && element.amount > 1) {
+      if (element.value <= changeDue && element.amount >= 1) {
         element.amount--;
         return element;
       }
@@ -69,6 +69,8 @@ function checkCashRegister(price, cash, cid) {
     if (usedDenomination) {
       changeDue = roundedToTwoDecimals(changeDue - usedDenomination.value);
       console.log("changeDue", changeDue);
+      console.log(usedDenomination);
+
       change.push(usedDenomination);
     } else {
       changeDue = -1;
@@ -94,18 +96,24 @@ function checkCashRegister(price, cash, cid) {
   calculateChange(changeDue);
 }
 
-checkCashRegister(
-  18.45,
-  20,
-  (cid = [
-    ["PENNY", 1.01],
-    ["NICKEL", 2.05],
-    ["DIME", 3.1],
-    ["QUARTER", 4.25],
-    ["ONE", 90],
-    ["FIVE", 55],
-    ["TEN", 20],
-    ["TWENTY", 60],
-    ["ONE HUNDRED", 100]
-  ])
-);
+checkCashRegister(3.26, 100, [
+  ["PENNY", 1.01],
+  ["NICKEL", 2.05],
+  ["DIME", 3.1],
+  ["QUARTER", 4.25],
+  ["ONE", 90],
+  ["FIVE", 55],
+  ["TEN", 20],
+  ["TWENTY", 60],
+  ["ONE HUNDRED", 100]
+]);
+
+// [
+//   ["TWENTY", 60],
+//   ["TEN", 20],
+//   ["FIVE", 15],
+//   ["ONE", 1],
+//   ["QUARTER", 0.5],
+//   ["DIME", 0.2],
+//   ["PENNY", 0.04]
+// ]
