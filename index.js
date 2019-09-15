@@ -1,6 +1,9 @@
-function checkCashRegister(price, cash, cid) {
+function checkCashRegister(price, cash, oldCid) {
   const newCid = [],
-    change = [];
+    change = [],
+    change2 = [];
+
+  const cid = JSON.parse(JSON.stringify(oldCid));
 
   let totalCash, changeDue;
 
@@ -36,9 +39,9 @@ function checkCashRegister(price, cash, cid) {
   convertCid(cid);
 
   //calculate total cash amount in register
-  const calcTotalCash = newCid => {
-    totalSum = 0;
-    newCid
+  const calcTotalCash = cid => {
+    let totalSum = 0;
+    cid
       .map(value => {
         return value[1];
       })
@@ -56,7 +59,28 @@ function checkCashRegister(price, cash, cid) {
   //calculate initial due change
   changeDue = roundedToTwoDecimals(cash - price);
 
+  const revertCid = change2 => {
+    let prevName = "";
+    change2.map(element => {
+      if (prevName !== element.name) {
+        change.push([element.name, element.value]);
+      } else {
+        change[change.length - 1][1] = roundedToTwoDecimals(
+          change[change.length - 1][1] + element.value
+        );
+        // console.log(change);
+      }
+      prevName = element.name;
+    });
+  };
+
   const calculateChange = changeDue => {
+    if (changeDue === calcTotalCash(cid)) {
+      console.log(`{status: "CLOSED", change: cid}`);
+      revertCid(change2);
+      return { status: "CLOSED", change: oldCid };
+    }
+    console.log("ch due", changeDue);
     let usedDenomination;
 
     usedDenomination = newCid.find(element => {
@@ -68,52 +92,40 @@ function checkCashRegister(price, cash, cid) {
 
     if (usedDenomination) {
       changeDue = roundedToTwoDecimals(changeDue - usedDenomination.value);
-      console.log("changeDue", changeDue);
-      console.log(usedDenomination);
 
-      change.push(usedDenomination);
+      change2.push(usedDenomination);
     } else {
       changeDue = -1;
     }
 
-    if (changeDue === calcTotalCash(newCid)) {
-      console.log(`{status: "CLOSED", change: [...]}`);
-      return { status: "CLOSED", change };
-    } else if (changeDue > 0 && changeDue !== totalCash) {
+    if (changeDue > 0 && changeDue !== totalCash) {
       return calculateChange(changeDue);
     } else if (changeDue === 0) {
-      console.log(`{ status: "CLOSED", change }`, change);
-      return { status: "CLOSED", change };
+      revertCid(change2);
+      //   console.log(`{ status: "OPEN", change }`, change);
+      return { status: "OPEN", change };
     } else if (changeDue === -1) {
-      console.log(`{ status: "INSUFFICIENT_FUNDS", change }`, {
-        status: "INSUFFICIENT_FUNDS",
-        change: []
-      });
+      //   console.log(`{ status: "INSUFFICIENT_FUNDS", change }`, {
+      //     status: "INSUFFICIENT_FUNDS",
+      //     change: []
+      //   });
+      revertCid(change2);
       return { status: "INSUFFICIENT_FUNDS", change: [] };
     }
   };
-
-  calculateChange(changeDue);
+  const answer = calculateChange(changeDue);
+  console.log(answer);
+  return answer;
 }
 
-checkCashRegister(3.26, 100, [
-  ["PENNY", 1.01],
-  ["NICKEL", 2.05],
-  ["DIME", 3.1],
-  ["QUARTER", 4.25],
-  ["ONE", 90],
-  ["FIVE", 55],
-  ["TEN", 20],
-  ["TWENTY", 60],
-  ["ONE HUNDRED", 100]
+checkCashRegister(19.5, 20, [
+  ["PENNY", 0.5],
+  ["NICKEL", 0],
+  ["DIME", 0],
+  ["QUARTER", 0],
+  ["ONE", 0],
+  ["FIVE", 0],
+  ["TEN", 0],
+  ["TWENTY", 0],
+  ["ONE HUNDRED", 0]
 ]);
-
-// [
-//   ["TWENTY", 60],
-//   ["TEN", 20],
-//   ["FIVE", 15],
-//   ["ONE", 1],
-//   ["QUARTER", 0.5],
-//   ["DIME", 0.2],
-//   ["PENNY", 0.04]
-// ]
